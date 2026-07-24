@@ -1,0 +1,28 @@
+{
+  "name": "mine-slope-compliance",
+  "version": "1.0.0",
+  "private": true,
+  "description": "基于 Cesium 的矿山边坡工作台面合规性检查系统",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview --host"
+  },
+  "dependencies": {
+    "cesium": "^1.119.0",
+    "vue": "^3.4.38",
+    "pinia": "^2.2.2",
+    "element-plus": "^2.8.0",
+    "d3-delaunay": "^6.0.4",
+    "xlsx": "^0.18.5",
+    "jspdf": "^2.5.1",
+    "html2canvas": "^1.4.1"
+  },
+  "devDependencies": {
+    "vite": "^5.4.0",
+    "@vitejs/plugin-vue": "^5.1.0",
+    "vite-plugin-cesium": "^1.2.23",
+    "sass": "^1.77.0"
+  }
+}

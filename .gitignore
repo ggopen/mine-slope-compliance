@@ -1,0 +1,8 @@
+node_modules/
+dist/
+.root/.gh_token
+*.log
+.access-qr.png
+serve.py
+test/
+.codebuddy/
