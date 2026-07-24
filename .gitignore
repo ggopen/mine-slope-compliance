@@ -6,4 +6,3 @@ dist/
 serve.py
 test/
 .codebuddy/
-.github/workflows/
