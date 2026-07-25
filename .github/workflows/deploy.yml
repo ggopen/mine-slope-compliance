@@ -27,6 +27,14 @@ jobs:
       - run: npm run build
         env:
           DEPLOY_BASE: /mine-slope-compliance/
+      # vite-plugin-cesium 在绝对 base 下会把 cesium 资源放到 dist/<base>/cesium/
+      # 这里把嵌套目录展平到 dist 根，使 URL /mine-slope-compliance/cesium/* 能命中
+      - run: |
+          if [ -d "dist/mine-slope-compliance/cesium" ]; then
+            rm -rf dist/cesium
+            mv dist/mine-slope-compliance/cesium dist/cesium
+            rm -rf dist/mine-slope-compliance
+          fi
       - uses: actions/upload-pages-artifact@v3
         with:
           path: dist
