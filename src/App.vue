@@ -93,18 +93,23 @@ export default {
   },
   methods: {
     onSceneReady(el) {
-      this.scene = new MineScene(el);
-      this.renderer = new PlatformRenderer(this.scene.viewer);
-      this.engine = new AnalysisEngine();
-      // 阈值/参数变更 -> 防抖自动重算
-      this._rerun = debounce(() => this.runAnalysis(), 500);
-      this.$watch(
-        () => this.config,
-        () => { if (this.analysis.status === 'done' && this.dem) this._rerun(); },
-        { deep: true }
-      );
-      // 首屏自动加载样例，便于团队立即验证
-      this.loadSample();
+      try {
+        this.scene = new MineScene(el);
+        this.renderer = new PlatformRenderer(this.scene.viewer);
+        this.engine = new AnalysisEngine();
+        // 阈值/参数变更 -> 防抖自动重算
+        this._rerun = debounce(() => this.runAnalysis(), 500);
+        this.$watch(
+          () => this.config,
+          () => { if (this.analysis.status === 'done' && this.dem) this._rerun(); },
+          { deep: true }
+        );
+        // 首屏自动加载样例，便于团队立即验证
+        this.loadSample();
+      } catch (e) {
+        console.error(e);
+        useAnalysisStore().setError('三维场景初始化失败：请使用支持 WebGL 的现代浏览器（Chrome/Edge/Firefox），并检查显卡驱动已启用。');
+      }
     },
 
     async loadSample() {

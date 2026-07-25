@@ -6,3 +6,6 @@ dist/
 serve.py
 test/
 .codebuddy/
+screenshot-*.png
+test-browser*.cjs
+test-webgl.cjs

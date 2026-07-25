@@ -25,7 +25,8 @@ export class MineScene {
       infoBox: false,
       selectionIndicator: false,
       shouldAnimate: true,
-      contextOptions: { preserveDrawingBuffer: true }
+      contextOptions: { preserveDrawingBuffer: true },
+      showRenderLoopErrors: false  // 自己捕获并展示中文错误
     });
 
     this.viewer.scene.globe.show = true;
