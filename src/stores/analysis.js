@@ -12,7 +12,7 @@ export const useAnalysisStore = defineStore('analysis', {
     platforms: [],
     summary: null,
     selectedId: null,
-    dataSource: 'none' // none | synthetic | tiles
+    dataSource: 'none' // none | synthetic | tiles | terrain
   }),
   getters: {
     selectedPlatform: (s) => s.platforms.find((p) => p.id === s.selectedId) || null,

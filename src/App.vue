@@ -88,7 +88,7 @@ export default {
     config() { return useConfigStore().config; },
     analysis() { return useAnalysisStore(); },
     dataSourceLabel() {
-      return { none: '未加载', synthetic: '程序化样例', tiles: '3D Tiles 实景模型' }[this.analysis.dataSource] || '未加载';
+      return { none: '未加载', synthetic: '程序化样例', tiles: '3D Tiles 实景模型', terrain: '真实地形数据' }[this.analysis.dataSource] || '未加载';
     }
   },
   methods: {
@@ -115,15 +115,36 @@ export default {
     async loadSample() {
       if (!this.scene) return;
       const cfg = useConfigStore().config;
-      const dem = buildSyntheticDEM(cfg);
-      const mesh = buildSyntheticMesh(cfg);
-      this.scene.center = { lon: cfg.demoMine.centerLon, lat: cfg.demoMine.centerLat };
-      this.scene.sizeMeters = cfg.demoMine.sizeMeters;
-      this.scene.loadSyntheticMine(mesh);
-      this.renderer.setCenter(cfg.demoMine.centerLon, cfg.demoMine.centerLat);
-      this.dem = dem;
-      this.ui.modelVisible = true;
-      this.runAnalysis();
+      const store = useAnalysisStore();
+      store.setLoading('正在加载真实地形数据...');
+      try {
+        // 设置真实山地的中心坐标
+        this.scene.center = { lon: cfg.demoMine.centerLon, lat: cfg.demoMine.centerLat };
+        this.scene.sizeMeters = cfg.demoMine.sizeMeters;
+        // 飞到目标区域，触发地形瓦片按需加载
+        this.scene.flyToModel();
+        // 从真实地形表面采样 DEM
+        const dem = await this.scene.sampleDEM(cfg);
+        this.renderer.setCenter(cfg.demoMine.centerLon, cfg.demoMine.centerLat);
+        this.dem = dem;
+        this.ui.modelVisible = true;
+        store.dataSource = 'terrain';
+        store.setLoading('正在识别边坡工作台面...');
+        this.runAnalysis();
+      } catch (e) {
+        console.error('地形采样失败，回退到程序化样例', e);
+        // 回退方案：如果地形服务不可用，使用程序化样例 DEM
+        const dem = buildSyntheticDEM(cfg);
+        const mesh = buildSyntheticMesh(cfg);
+        this.scene.center = { lon: cfg.demoMine.centerLon, lat: cfg.demoMine.centerLat };
+        this.scene.sizeMeters = cfg.demoMine.sizeMeters;
+        this.scene.loadSyntheticMine(mesh);
+        this.renderer.setCenter(cfg.demoMine.centerLon, cfg.demoMine.centerLat);
+        this.dem = dem;
+        this.ui.modelVisible = true;
+        store.dataSource = 'synthetic';
+        this.runAnalysis();
+      }
     },
 
     async loadTiles(url) {
@@ -135,6 +156,7 @@ export default {
         this.renderer.setCenter(this.scene.center.lon, this.scene.center.lat);
         this.dem = dem;
         this.ui.modelVisible = true;
+        useAnalysisStore().dataSource = 'tiles';
         this.runAnalysis();
       } catch (e) {
         useAnalysisStore().setError(e.message || '加载 3D Tiles 失败');

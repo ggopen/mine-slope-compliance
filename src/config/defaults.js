@@ -13,7 +13,7 @@ export const DEFAULT_CONFIG = {
 
   // 分析参数
   analysis: {
-    samplingResolution: 1.0,      // 采样间距（米），决定分析精度
+    samplingResolution: 2.0,      // 采样间距（米），决定分析精度
     maxSamplingPoints: 500000,    // 最大采样点数，防止内存溢出
     slopeThreshold: 15,           // 坡度阈值（度），小于此值判定为近水平台面
     minPlatformArea: 15,          // 最小台面面积（平方米），过滤噪点
@@ -50,16 +50,16 @@ export const DEFAULT_CONFIG = {
     annotationDensity: 'medium' // sparse | medium | dense
   },
 
-  // 演示样例矿山的地理中心（WGS84）
+  // 演示位置：真实山地坐标（华山附近，具有明显的阶梯状地形）
+  // 用户可更换为任意有边坡特征的真实位置
   demoMine: {
-    centerLon: 112.4536,
-    centerLat: 34.6692,
-    sizeMeters: 400,            // 矿山覆盖区域边长（米）
-    benchCount: 6,              // 台阶数
-    benchHeight: 12,            // 台阶高度（米）
-    baseElevation: 1240,        // 底部高程（米）
-    normalWidth: 10,            // 正常台面宽度（米），用于演示合规台面
-    // 故意制造一个不合规的窄台面用于演示
+    centerLon: 110.0943,    // 华山东侧附近
+    centerLat: 34.4742,
+    sizeMeters: 500,        // 采样区域边长（米）
+    benchCount: 6,          // 台阶数（用于程序化 DEM 回退方案）
+    benchHeight: 12,        // 台阶高度（米）
+    baseElevation: 1000,    // 底部高程（米）
+    normalWidth: 10,        // 正常台面宽度（米）
     narrowBenchIndex: 3,
     narrowBenchWidth: 3.2
   }
