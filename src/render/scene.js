@@ -43,6 +43,34 @@ export class MineScene {
     this.center = { lon: 0, lat: 0 };
     this.sizeMeters = 400;
     this._terrainReady = false;
+    this._baseLayerReady = this._initRealWorldLayers();
+  }
+
+  async _initRealWorldLayers() {
+    try {
+      const imageryLayer = await Cesium.ImageryLayer.fromProviderAsync(
+        Cesium.IonImageryProvider.fromAssetId(2)
+      );
+      this.viewer.imageryLayers.add(imageryLayer);
+      this.viewer.scene.globe.terrainProvider = await Cesium.Terrain.fromWorldTerrain({
+        requestWaterMask: false,
+        requestVertexNormals: true
+      });
+      this._terrainReady = true;
+      return true;
+    } catch (e) {
+      console.warn('真实世界底图/地形加载失败，降级为椭球地形', e);
+      this._terrainReady = true;
+      return false;
+    }
+  }
+
+  async _waitForTerrain(timeout = 30000) {
+    if (this._terrainReady) return;
+    await Promise.race([
+      this._baseLayerReady,
+      new Promise(r => setTimeout(r, timeout))
+    ]);
   }
 
   /** 飞至模型范围 */
