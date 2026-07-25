@@ -113,6 +113,7 @@ export default {
     },
 
     async loadSample() {
+      if (!this.scene) return;
       const cfg = useConfigStore().config;
       const dem = buildSyntheticDEM(cfg);
       const mesh = buildSyntheticMesh(cfg);
@@ -141,13 +142,13 @@ export default {
     },
 
     async runAnalysis() {
-      if (!this.dem) return;
+      if (!this.dem || !this.engine) return;
       const cfg = useConfigStore().config;
       const store = useAnalysisStore();
       store.setLoading('正在识别边坡工作台面...');
       try {
         const { platforms, summary } = await this.engine.analyze(this.dem, cfg);
-        this.renderer.render(platforms, cfg);
+        if (this.renderer) this.renderer.render(platforms, cfg);
         this.lastPlatforms = platforms;
         store.setResult({ platforms, summary }, this.analysis.dataSource);
       } catch (e) {

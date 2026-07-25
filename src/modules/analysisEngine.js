@@ -5,6 +5,38 @@
  */
 import AnalysisWorker from '../workers/analysis.worker.js?worker';
 
+/**
+ * 把 Vue reactive 对象 / 含 TypedArray 的 DEM 深度克隆为可结构化克隆的纯对象。
+ * 关键：Pinia store 的 config 是 Proxy，postMessage 无法克隆 Proxy，会抛
+ * "could not be cloned" 错误。这里用 JSON 序列化去掉响应式包装，
+ * 同时把 Float32Array 转成普通数组（Worker 侧再转回）。
+ */
+function toTransferable(dem, config) {
+  // config 是纯数据，JSON 序列化即可去掉 reactive proxy
+  const plainConfig = JSON.parse(JSON.stringify(config));
+
+  // DEM 里的 Float32Array 需要单独处理：JSON 序列化会把 TypedArray 变成普通对象
+  // 直接构造纯对象 + 用 slice() 复制 TypedArray（不 transfer，主线程仍需保留）
+  const plainDem = {
+    cols: dem.cols,
+    rows: dem.rows,
+    cellSize: dem.cellSize,
+    centerLon: dem.centerLon,
+    centerLat: dem.centerLat,
+    lonStep: dem.lonStep,
+    latStep: dem.latStep,
+    minLon: dem.minLon,
+    minLat: dem.minLat,
+    bounds: dem.bounds ? JSON.parse(JSON.stringify(dem.bounds)) : undefined,
+    // Float32Array.slice() 返回新的 Float32Array，可被结构化克隆
+    heights: dem.heights.slice(),
+    xs: dem.xs ? dem.xs.slice() : undefined,
+    ys: dem.ys ? dem.ys.slice() : undefined
+  };
+
+  return { dem: plainDem, config: plainConfig };
+}
+
 export class AnalysisEngine {
   constructor() {
     this.worker = new AnalysisWorker();
@@ -30,8 +62,10 @@ export class AnalysisEngine {
         if (this.current) this.current.reject(new Error(err.message || 'Worker 错误'));
       };
 
-      // DEM 通过结构化克隆传入（不转移 buffer，主线程仍需保留用于渲染）
-      this.worker.postMessage({ dem, config, reqId });
+      // 关键：先去掉 Vue reactive proxy + 复制 TypedArray，否则 postMessage 会抛
+      // "Failed to execute 'postMessage' on 'Worker': could not be cloned"
+      const { dem: plainDem, config: plainConfig } = toTransferable(dem, config);
+      this.worker.postMessage({ dem: plainDem, config: plainConfig, reqId });
     });
   }
 
