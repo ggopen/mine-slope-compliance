@@ -5,7 +5,7 @@
       <span class="title">矿山边坡合规性检查</span>
     </div>
     <div class="actions">
-      <el-button size="small" type="primary" @click="$emit('load-sample')">加载真实地形</el-button>
+      <el-button size="small" type="primary" @click="$emit('load-sample')">加载实景模型</el-button>
       <el-button size="small" @click="promptTiles">加载 3D Tiles</el-button>
       <el-divider direction="vertical" />
       <el-button size="small" :loading="status === 'loading'" @click="$emit('run')">开始分析</el-button>

@@ -112,38 +112,55 @@ export default {
       }
     },
 
+    // 用户提供的在线 3D Tiles 实景模型（祁县寺庙实景数据）
+    // 虽然不是矿山，但可用来验证边坡台面识别、宽度测量、合规判定的完整业务逻辑
+    SAMPLE_TILES_URL: 'https://data.mars3d.cn/3dtiles/qx-simiao/tileset.json',
+
     async loadSample() {
       if (!this.scene) return;
       const cfg = useConfigStore().config;
       const store = useAnalysisStore();
-      store.setLoading('正在加载真实地形数据...');
+      store.setLoading('正在加载 3D Tiles 实景模型...');
       try {
-        // 设置真实山地的中心坐标
-        this.scene.center = { lon: cfg.demoMine.centerLon, lat: cfg.demoMine.centerLat };
-        this.scene.sizeMeters = cfg.demoMine.sizeMeters;
-        // 飞到目标区域，触发地形瓦片按需加载
+        // 加载用户提供的真实 3D Tiles 模型
+        await this.scene.load3DTiles(this.SAMPLE_TILES_URL);
         this.scene.flyToModel();
-        // 从真实地形表面采样 DEM
+        store.setLoading('正在从模型表面采样高程...');
+        // 从 3D Tiles 模型表面采样生成 DEM
         const dem = await this.scene.sampleDEM(cfg);
-        this.renderer.setCenter(cfg.demoMine.centerLon, cfg.demoMine.centerLat);
+        this.renderer.setCenter(this.scene.center.lon, this.scene.center.lat);
         this.dem = dem;
         this.ui.modelVisible = true;
-        store.dataSource = 'terrain';
+        store.dataSource = 'tiles';
         store.setLoading('正在识别边坡工作台面...');
         this.runAnalysis();
       } catch (e) {
-        console.error('地形采样失败，回退到程序化样例', e);
-        // 回退方案：如果地形服务不可用，使用程序化样例 DEM
-        const dem = buildSyntheticDEM(cfg);
-        const mesh = buildSyntheticMesh(cfg);
-        this.scene.center = { lon: cfg.demoMine.centerLon, lat: cfg.demoMine.centerLat };
-        this.scene.sizeMeters = cfg.demoMine.sizeMeters;
-        this.scene.loadSyntheticMine(mesh);
-        this.renderer.setCenter(cfg.demoMine.centerLon, cfg.demoMine.centerLat);
-        this.dem = dem;
-        this.ui.modelVisible = true;
-        store.dataSource = 'synthetic';
-        this.runAnalysis();
+        console.error('3D Tiles 加载失败，回退到真实地形采样', e);
+        // 回退方案1：用 Cesium 全球地形采样
+        try {
+          this.scene.center = { lon: cfg.demoMine.centerLon, lat: cfg.demoMine.centerLat };
+          this.scene.sizeMeters = cfg.demoMine.sizeMeters;
+          this.scene.flyToModel();
+          const dem = await this.scene.sampleDEM(cfg);
+          this.renderer.setCenter(cfg.demoMine.centerLon, cfg.demoMine.centerLat);
+          this.dem = dem;
+          this.ui.modelVisible = true;
+          store.dataSource = 'terrain';
+          this.runAnalysis();
+        } catch (e2) {
+          console.error('地形采样也失败，回退到程序化样例', e2);
+          // 回退方案2：程序化样例 DEM
+          const dem = buildSyntheticDEM(cfg);
+          const mesh = buildSyntheticMesh(cfg);
+          this.scene.center = { lon: cfg.demoMine.centerLon, lat: cfg.demoMine.centerLat };
+          this.scene.sizeMeters = cfg.demoMine.sizeMeters;
+          this.scene.loadSyntheticMine(mesh);
+          this.renderer.setCenter(cfg.demoMine.centerLon, cfg.demoMine.centerLat);
+          this.dem = dem;
+          this.ui.modelVisible = true;
+          store.dataSource = 'synthetic';
+          this.runAnalysis();
+        }
       }
     },
 

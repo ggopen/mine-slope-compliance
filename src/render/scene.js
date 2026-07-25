@@ -237,38 +237,62 @@ export class MineScene {
     // 等待地形 provider 就绪
     await this._waitForTerrain();
 
-    // 方法1：用 sampleTerrainMostDetailed 从地形 provider 获取精确高程
-    const terrainProvider = this.viewer.scene.globe.terrainProvider;
     let sampledHeights = null;
-    try {
-      const updated = await Cesium.sampleTerrainMostDetailed(terrainProvider, positions.slice());
-      sampledHeights = updated.map(p => p.height);
-    } catch (e) {
-      console.warn('sampleTerrainMostDetailed 失败，尝试 sampleHeight 后备方案', e);
-    }
 
-    // 方法2：如果方法1失败或数据缺失，用 scene.sampleHeight 后备
-    if (!sampledHeights || sampledHeights.some(h => h === undefined || Number.isNaN(h))) {
-      // 飞到采样区域，渲染画面使 sampleHeight 可用
+    // 当加载了 3D Tiles 模型时，必须用 scene.sampleHeight 采样模型表面
+    // （sampleTerrainMostDetailed 只采样地形，不包含 3D Tiles 模型）
+    if (this.tileset) {
+      // 飞到模型区域，渲染画面使 sampleHeight 可用
       const camDest = Cesium.Cartesian3.fromDegrees(centerLon, centerLat - 0.002, sizeMeters * 0.8);
       this.viewer.camera.setView({
         destination: camDest,
         orientation: { heading: 0, pitch: Cesium.Math.toRadians(-45), roll: 0 }
       });
-      // 多次渲染以确保地形瓦片加载
-      for (let i = 0; i < 6; i++) {
+      // 多次渲染以确保 3D Tiles 瓦片加载到当前视角
+      for (let i = 0; i < 8; i++) {
         this.viewer.render();
-        await new Promise(r => setTimeout(r, 400));
+        await new Promise(r => setTimeout(r, 500));
       }
-      const exclude = this.tileset ? [this.tileset] : [];
+      sampledHeights = new Array(positions.length).fill(NaN);
+      const exclude = [this.tileset];
       for (let i = 0; i < positions.length; i++) {
-        if (sampledHeights && !Number.isNaN(sampledHeights[i]) && sampledHeights[i] !== undefined) continue;
         try {
           const h = this.viewer.scene.sampleHeight(positions[i], exclude, 1);
-          if (sampledHeights) sampledHeights[i] = h;
-          else sampledHeights = sampledHeights || new Array(positions.length).fill(NaN), sampledHeights[i] = h;
+          sampledHeights[i] = h;
         } catch {
           // 保持 NaN
+        }
+      }
+    } else {
+      // 没有加载 3D Tiles 时，用 sampleTerrainMostDetailed 从地形 provider 采样
+      const terrainProvider = this.viewer.scene.globe.terrainProvider;
+      try {
+        const updated = await Cesium.sampleTerrainMostDetailed(terrainProvider, positions.slice());
+        sampledHeights = updated.map(p => p.height);
+      } catch (e) {
+        console.warn('sampleTerrainMostDetailed 失败，尝试 sampleHeight 后备方案', e);
+      }
+
+      // 如果方法1失败或数据缺失，用 scene.sampleHeight 后备
+      if (!sampledHeights || sampledHeights.some(h => h === undefined || Number.isNaN(h))) {
+        const camDest = Cesium.Cartesian3.fromDegrees(centerLon, centerLat - 0.002, sizeMeters * 0.8);
+        this.viewer.camera.setView({
+          destination: camDest,
+          orientation: { heading: 0, pitch: Cesium.Math.toRadians(-45), roll: 0 }
+        });
+        for (let i = 0; i < 6; i++) {
+          this.viewer.render();
+          await new Promise(r => setTimeout(r, 400));
+        }
+        for (let i = 0; i < positions.length; i++) {
+          if (sampledHeights && !Number.isNaN(sampledHeights[i]) && sampledHeights[i] !== undefined) continue;
+          try {
+            const h = this.viewer.scene.sampleHeight(positions[i], [], 1);
+            if (sampledHeights) sampledHeights[i] = h;
+            else sampledHeights = sampledHeights || new Array(positions.length).fill(NaN), sampledHeights[i] = h;
+          } catch {
+            // 保持 NaN
+          }
         }
       }
     }
