@@ -8,4 +8,6 @@ test/
 .codebuddy/
 screenshot-*.png
 test-browser*.cjs
-test-webgl.cjs
+test-webgl*.cjs
+test-webgl*.mjs
+test-screenshot*.png

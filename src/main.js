@@ -12,8 +12,8 @@ const app = createApp(App);
 app.use(createPinia());
 app.use(ElementPlus);
 
-// Cesium 离线友好
-Cesium.Ion.defaultAccessToken = '';
+// 注意：Cesium Ion token 已在 src/render/scene.js 中设置
+// 请勿在此处再次清空，否则真实地形/影像服务将无法访问
 
 const cfg = useConfigStore();
 cfg.applyTheme();
