@@ -14,16 +14,7 @@ Cesium.Ion.defaultAccessToken =
 export class MineScene {
   constructor(container) {
     this.viewer = new Cesium.Viewer(container, {
-      // 真实卫星影像底图（Cesium World Imagery，通过默认 token 访问）
-      baseLayer: Cesium.ImageryLayer.fromProviderAsync(
-        Cesium.IonImageryProvider.fromAssetId(2),
-        {}
-      ),
-      // 真实全球地形（Cesium World Terrain，通过默认 token 访问）
-      terrain: Cesium.Terrain.fromWorldTerrain({
-        requestWaterMask: false,
-        requestVertexNormals: true
-      }),
+      baseLayer: false,
       baseLayerPicker: false,
       geocoder: false,
       homeButton: false,
