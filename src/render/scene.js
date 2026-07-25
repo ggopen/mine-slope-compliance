@@ -7,10 +7,9 @@
 import * as Cesium from 'cesium';
 import { gridSteps, lonLatToLocal, localToLonLat } from '../utils/geoUtils.js';
 
-// 使用 Cesium 官方提供的评估用默认 token（仅用于演示）
-// 生产环境请替换为你自己的 ion token：https://cesium.com
+// 使用 Cesium 官方源码中内置的默认评估 token（仅用于演示，建议生产环境替换为自己的 token）
 Cesium.Ion.defaultAccessToken =
-  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJlYmFiY2M4Yy00ZDE1LTQwY2YtODJkYS04MGJiNWVjNzkxZjMiLCJpZCI6MjU5LCJpYXQiOjE3Njc2MjcyMzR9.tShykOZPNZIHyBljG1bvvQMwpbLFjmq6vdhfI097SpI';
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiIzNzRjZTkzNC05M2UwLTRlNDItOWU0My1hYjk5YjFiNTNhYTMiLCJpZCI6MjU5LCJzdWIiOiJDZXNpdW1KUyIsImlzcyI6Imh0dHBzOi8vYXBpLmNlc2l1bS5jb20iLCJhdWQiOiIxLjE0MyBSZWxlYXNlIC0gRGVsZXRlIG9uIFNlcHRlbWJlciAxLCAyMDI2IiwiaWF0IjoxNzgyMzY4NzY4fQ.kDcFqK7jTTloOcBbwb-epSQGd1Lu12_hRuqk1XRE_H8';
 
 export class MineScene {
   constructor(container) {
